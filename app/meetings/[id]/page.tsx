@@ -7,14 +7,8 @@ interface PageProps {
 }
 
 async function getMeeting(id: string): Promise<SacramentMeeting | null> {
-    try {
-        const res = await fetch(`http://localhost:3000/api/meetings/${id}`, { cache: 'no-store' });
-        if (!res.ok) return null;
-        return res.json();
-    } catch {
-        const { getMeetingById } = await import('@/lib/meetings-db');
-        return getMeetingById(Number(id));
-    }
+    const { getMeetingById } = await import('@/lib/meetings-db');
+    return getMeetingById(Number(id));
 }
 
 export default async function MeetingDetailPage({ params }: PageProps) {
