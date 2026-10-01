@@ -1,6 +1,14 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+
 import EditMeetingForm from '@/components/EditMeetingForm';
 import { getMeetingById } from '@/lib/meetings-db';
+
+export const metadata: Metadata = {
+  title: 'Edit Meeting',
+  description:
+    'Edit the date and details for an existing sacrament meeting.',
+};
 
 type EditMeetingPageProps = {
   params: Promise<{ id: string }>;

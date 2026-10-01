@@ -3,6 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+
+import { auth } from '@/auth';
+
 import {
     addMeeting,
     updateMeeting as updateMeetingDb,
@@ -13,9 +16,12 @@ const MeetingFormSchema = z.object({
     date: z
         .string()
         .min(1, 'Please select a meeting date.'),
-    meetingType: z.enum(['testimony', 'regular', 'stake', 'general'], {
-        error: 'Please select a meeting type.',
-    }),
+    meetingType: z.enum(
+        ['testimony', 'regular', 'stake', 'general'],
+        {
+            error: 'Please select a meeting type.',
+        }
+    ),
     presiding: z
         .string()
         .trim()
@@ -46,10 +52,22 @@ export type State = {
     };
 };
 
+async function requireAuth() {
+    const session = await auth();
+
+    if (!session?.user) {
+        redirect('/login');
+    }
+
+    return session;
+}
+
 export async function createMeeting(
     prevState: State,
     formData: FormData
 ): Promise<State> {
+    await requireAuth();
+
     const validatedFields = MeetingFormSchema.safeParse({
         date: formData.get('date'),
         meetingType: formData.get('meetingType'),
@@ -108,6 +126,8 @@ export async function updateMeeting(
     prevState: State,
     formData: FormData
 ): Promise<State> {
+    await requireAuth();
+
     const validatedFields = MeetingFormSchema.safeParse({
         date: formData.get('date'),
         meetingType: formData.get('meetingType'),
@@ -152,6 +172,8 @@ export async function updateMeeting(
 }
 
 export async function deleteMeeting(id: number): Promise<void> {
+    await requireAuth();
+
     try {
         const deleted = await deleteMeetingDb(id);
 
@@ -160,7 +182,10 @@ export async function deleteMeeting(id: number): Promise<void> {
         }
     } catch (error) {
         console.error('Failed to delete meeting:', error);
-        throw new Error('Could not delete the meeting. Please try again.');
+
+        throw new Error(
+            'Could not delete the meeting. Please try again.'
+        );
     }
 
     revalidatePath('/meetings');
